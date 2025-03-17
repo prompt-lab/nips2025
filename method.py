@@ -87,7 +87,7 @@ class GatedSumLinear(nn.Module):
         self.gate = nn.Linear(input_dim, head_num)
 
     def forward(self, x):
-        gating_scores = gate_adapter(x)
+        gating_scores = gate(x)
         gating_weights = F.softmax(gating_scores, dim=-1)
         expert_outputs = torch.stack([expert(x) for expert in self.linear_list], dim=-1)  # [b, n, d, num]
         out = torch.sum(gating_weights.unsqueeze(2) * expert_outputs, dim=-1)
