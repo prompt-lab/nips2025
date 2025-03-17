@@ -77,6 +77,22 @@ class SumConv2d(nn.Module):
             out = sum(conv(x) for conv in self.conv2_list)
             return out
 
+
+class GatedSumLinear(nn.Module):
+    def __init__(self, linear_list, input_dim, head_num):
+        super(GatedSumLinear, self).__init__()
+        self.linear_list = linear_list
+        self.head_num = head_num
+        # 门控网络（简单的全连接层）
+        self.gate = nn.Linear(input_dim, head_num)
+
+    def forward(self, x):
+        gating_scores = gate_adapter(x)
+        gating_weights = F.softmax(gating_scores, dim=-1)
+        expert_outputs = torch.stack([expert(x) for expert in self.linear_list], dim=-1)  # [b, n, d, num]
+        out = torch.sum(gating_weights.unsqueeze(2) * expert_outputs, dim=-1)
+        return out
+
 class GatedSumConv2d(nn.Module):
     def __init__(self, conv2_list, input_dim, head_num):
         super(GatedSumConv2d, self).__init__()
